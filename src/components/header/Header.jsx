@@ -25,21 +25,51 @@ export default function Header({ hideLogInButton }) {
   };
 
   return (
-    <header>
+    <header className='container d-flex align-items-center justify-content-between mt-3'>
       <h1>
-        <Link to='/'>Elevate</Link>
+        <Link className='text-decoration-none text-black' to='/'>
+          Elevate
+        </Link>
       </h1>
       {hideLogInButton || (
-        <>
-          {isTokenExpired() ? (
-            <button onClick={() => navigate(`/log-in`)}>Log in</button>
-          ) : (
-            <>
-              <p>{fullName}</p>
-              <button onClick={handleLogOut}>Log out</button>
-            </>
-          )}
-        </>
+        <div className='dropdown'>
+          <button
+            className='btn btn-secondary dropdown-toggle bg-transparent border-0 text-black'
+            type='button'
+            data-bs-toggle='dropdown'
+            aria-expanded='false'
+          >
+            {fullName}
+          </button>
+          <ul className='dropdown-menu'>
+            {isTokenExpired() ? (
+              <>
+                <li>
+                  <button
+                    className='dropdown-item'
+                    onClick={() => navigate(`/log-in`)}
+                  >
+                    Log in
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className='dropdown-item'
+                    onClick={() => navigate(`/sign-up`)}
+                  >
+                    Sign up
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <button className='dropdown-item' onClick={handleLogOut}>
+                  Log out
+                </button>
+              </li>
+            )}
+          </ul>
+        </div>
       )}
     </header>
   );

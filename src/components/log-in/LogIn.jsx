@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../header/Header';
+import { toast } from 'react-toastify';
 
 const logInSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -19,6 +20,9 @@ export default function LogIn() {
   const {
     register,
     handleSubmit,
+    setError,
+    watch,
+    clearErrors,
     formState: { errors },
   } = useForm({ resolver: zodResolver(logInSchema) });
 
@@ -34,43 +38,72 @@ export default function LogIn() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error('Failed to fetch data');
+      if (response.status == 401) {
+        setError('server', { message: 'Invalid credentials' });
+      } else if (!response.ok) toast.error('Failed to log in');
+      else {
+        const json = await response.json();
 
-      const json = await response.json();
+        localStorage.setItem('token', json.token);
+        localStorage.setItem('tokenExpiry', json.expiresAt);
+        localStorage.setItem(
+          'userFullName',
+          `${json.firstName} ${json.lastName}`
+        );
+        localStorage.setItem('userEmail', json.email);
 
-      localStorage.setItem('token', json.token);
-      localStorage.setItem('tokenExpiry', json.expiresAt);
-      localStorage.setItem(
-        'userFullName',
-        `${json.firstName} ${json.lastName}`
-      );
-      navigate('/');
-    } catch (err) {
-      console.log(err);
+        navigate('/');
+      }
+    } catch {
+      toast.error('Failed to log in');
     }
   };
 
   return (
     <>
       <Header hideLogInButton={true}></Header>
-      <main>
-        <ul>
-          {Object.values(errors).map((error) => {
-            return <li>{error.message}</li>;
-          })}
-        </ul>
-        <form onSubmit={handleSubmit(handleLogIn)}>
+      <main className='container flex-grow-1 d-flex flex-column justify-content-center align-items-center'>
+        {Object.values(errors).length ? (
+          <div className='bg-warning rounded-4 p-3 mb-3'>
+            <ul className='ps-3 mb-0'>
+              {Object.values(errors).map((error) => {
+                return <li>{error.message}</li>;
+              })}
+            </ul>
+            {}
+          </div>
+        ) : (
+          ''
+        )}
+        <form
+          onSubmit={handleSubmit(handleLogIn)}
+          className='d-flex flex-column align-items-center mb-4'
+        >
           <label htmlFor='email'>
             Email
-            <input type='email' name='email' {...register('email')} />
+            <input
+              type='email'
+              name='email'
+              {...register('email')}
+              className='form-control mb-3'
+            />
           </label>
           <label htmlFor='password'>
             Password
-            <input type='password' name='password' {...register('password')} />
+            <input
+              type='password'
+              name='password'
+              {...register('password')}
+              className='form-control mb-3'
+            />
           </label>
-          <input type='submit' value='Log in' />
+          <input
+            type='submit'
+            value='Log in'
+            className='btn bg-primary text-white'
+          />
         </form>
-        <p>
+        <p className='text-center'>
           Don't have an account yet? <Link to='/sign-up'>Sign up here</Link>
         </p>
       </main>

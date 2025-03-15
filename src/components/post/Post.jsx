@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { format } from 'date-fns';
+import { toast } from 'react-toastify';
 import Header from '../header/Header';
+import Comments from '../comments/Comments';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Post() {
   const [post, setPost] = useState([]);
@@ -8,7 +13,7 @@ export default function Post() {
   const { id } = useParams();
 
   useEffect(() => {
-    const logInUrl = import.meta.env.VITE_API_BASE_URL + '/posts/' + id;
+    const logInUrl = BASE_URL + '/posts/' + id;
 
     const fetchPosts = async () => {
       try {
@@ -16,13 +21,13 @@ export default function Post() {
           method: 'GET',
         });
 
-        if (!response.ok) throw new Error('Failed to fetch data');
+        if (!response.ok) toast.error('Error fetching posts');
 
         const json = await response.json();
 
         setPost(json.post);
-      } catch (err) {
-        console.log(err);
+      } catch {
+        toast.error('Error fetching posts');
       }
     };
 
@@ -32,22 +37,28 @@ export default function Post() {
   return (
     <>
       <Header />
-      <main>
-        <h2>{post.title}</h2>
+      <main className='container mt-4'>
+        <div className='d-flex justify-content-between'>
+          <p>{post.date ? format(post.date, 'd.M.yyyy., HH:mm') : ''}</p>
+          {post.author ? (
+            <p>By {post.author.firstName + ' ' + post.author.lastName}</p>
+          ) : (
+            ''
+          )}
+        </div>
+        <h2 className='article-heading mb-3'>{post.title}</h2>
+        {post.imageUrl && (
+          <img
+            className='article-image rounded-4 mb-4'
+            src={post.imageUrl}
+            alt=''
+            width='800px'
+            height='auto'
+          />
+        )}
         <p>{post.content}</p>
         <h3>Comments</h3>
-        {post.comments?.length === 0 ? (
-          <p>No comments</p>
-        ) : (
-          post.comments?.map((comment) => {
-            return (
-              <div key={comment.id}>
-                <h4>{comment.user.firstName + ' ' + comment.user.lastName}</h4>
-                <p>{comment.content}</p>
-              </div>
-            );
-          })
-        )}
+        <Comments commentsArray={post.comments} postId={id} />
       </main>
     </>
   );

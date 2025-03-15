@@ -1,0 +1,46 @@
+$primary: #05314a;
+
+@import '~bootstrap/scss/bootstrap';
+
+html,
+body {
+  height: 100%;
+}
+#root,
+body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+body {
+  background: rgb(166, 189, 203);
+  background: linear-gradient(
+    180deg,
+    rgb(210, 223, 231) 0%,
+    rgba(255, 252, 252, 1) 50%,
+    #fff 70%
+  );
+  background-repeat: no-repeat;
+}
+
+.card:hover {
+  cursor: pointer;
+}
+
+.card-img-top {
+  height: 200px;
+  object-fit: cover;
+}
+
+.article-image,
+.comments {
+  width: min(800px, 90%);
+}
+
+.article-heading {
+  font-size: 2.7em;
+}
+.three-dots {
+  font-weight: bold;
+}

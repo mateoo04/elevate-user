@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import './App.css';
 import { useNavigate } from 'react-router-dom';
 import Header from '../header/Header';
+import imageSvg from '../../assets/image.svg';
+import { toast } from 'react-toastify';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,13 +19,13 @@ function App() {
           method: 'GET',
         });
 
-        if (!response.ok) throw new Error('Failed to fetch data');
+        if (!response.ok) toast.error('Failed to fetch posts');
 
         const json = await response.json();
 
         setPosts(json.posts);
-      } catch (err) {
-        console.log(err);
+      } catch {
+        toast.error('Failed to fetch posts');
       }
     };
 
@@ -34,18 +35,43 @@ function App() {
   return (
     <>
       <Header />
-      <main>
+      <main className='container mt-4'>
         {posts.length === 0 ? (
           <p>Loading...</p>
         ) : (
-          posts.map((post) => {
-            return (
-              <div onClick={() => navigate(`/posts/${post.id}`)} key={post.id}>
-                <h2>{post.title}</h2>
-                <p>{post.content}</p>
-              </div>
-            );
-          })
+          <div className='row g-3'>
+            {posts.map((post) => {
+              return (
+                <div className='col-sm-6 col-lg-4'>
+                  <div
+                    className='card h-100'
+                    onClick={() => navigate(`/posts/${post.id}`)}
+                    key={post.id}
+                  >
+                    {post.imageUrl ? (
+                      <img
+                        src={post.imageUrl}
+                        className='card-img-top'
+                        alt=''
+                      />
+                    ) : (
+                      <div className='card-img-top d-flex align-content-center justify-content-center border-bottom border-2'>
+                        <img src={imageSvg} width='64px' alt='' />
+                      </div>
+                    )}
+                    <div className='card-body'>
+                      <h3 className='card-title'>{post.title}</h3>
+                      <p>
+                        {post.author
+                          ? `By ${post.author.firstName} ${post.author.lastName}`
+                          : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </main>
     </>

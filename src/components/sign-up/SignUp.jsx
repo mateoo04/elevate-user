@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
+import { toast } from 'react-toastify';
 import Header from '../header/Header';
 
 const createUserSchema = z
@@ -35,11 +36,11 @@ export default function SignUp() {
     formState: { errors },
   } = useForm({ resolver: zodResolver(createUserSchema) });
 
-  const logInUrl = import.meta.env.VITE_API_BASE_URL + '/auth/sign-up';
+  const signUpUrl = import.meta.env.VITE_API_BASE_URL + '/auth/sign-up';
 
   const handleSignUp = async (data) => {
     try {
-      const response = await fetch(logInUrl, {
+      const response = await fetch(signUpUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ export default function SignUp() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error('Failed to fetch data');
+      if (!response.ok) toast.error('Failed to sign up');
 
       const json = await response.json();
 
@@ -57,37 +58,68 @@ export default function SignUp() {
         'userFullName',
         `${json.firstName} ${json.lastName}`
       );
+      localStorage.setItem('userEmail', json.email);
+
       navigate('/');
-    } catch (err) {
-      console.log(err);
+    } catch {
+      toast.error('Failed to sign up');
     }
   };
 
   return (
     <>
       <Header hideLogInButton={true}></Header>
-      <main>
-        <ul>
-          {Object.values(errors).map((error) => {
-            return <li>{error.message}</li>;
-          })}
-        </ul>
-        <form onSubmit={handleSubmit(handleSignUp)}>
+      <main className='flex-grow-1 d-flex flex-column justify-content-center align-items-center'>
+        {Object.values(errors).length ? (
+          <div className='bg-warning rounded-4 p-3 mb-3'>
+            <ul className='ps-3 mb-0'>
+              {Object.values(errors).map((error) => {
+                return <li>{error.message}</li>;
+              })}
+            </ul>
+          </div>
+        ) : (
+          ''
+        )}
+        <form
+          onSubmit={handleSubmit(handleSignUp)}
+          className='d-flex flex-column align-items-center mb-4'
+        >
           <label htmlFor='firstName'>
             First name
-            <input type='text' name='fullName' {...register('firstName')} />
+            <input
+              type='text'
+              name='fullName'
+              {...register('firstName')}
+              className='form-control mb-3'
+            />
           </label>
           <label htmlFor='lastName'>
             Last name
-            <input type='text' name='lastName' {...register('lastName')} />
+            <input
+              type='text'
+              name='lastName'
+              {...register('lastName')}
+              className='form-control mb-3'
+            />
           </label>
           <label htmlFor='email'>
             E-mail
-            <input type='email' name='email' {...register('email')} />
+            <input
+              type='email'
+              name='email'
+              {...register('email')}
+              className='form-control mb-3'
+            />
           </label>
-          Password
           <label htmlFor='password'>
-            <input type='password' name='password' {...register('password')} />
+            Password
+            <input
+              type='password'
+              name='password'
+              {...register('password')}
+              className='form-control mb-3'
+            />
           </label>
           <label htmlFor='confirmPassword'>
             Confirm password
@@ -95,11 +127,14 @@ export default function SignUp() {
               type='password'
               name='confirmPassword'
               {...register('confirmPassword')}
+              className='form-control mb-3'
             />
           </label>
-          <button type='submits'>Sign up</button>
+          <button type='submits' className='btn bg-primary text-white'>
+            Sign up
+          </button>
         </form>
-        <p>
+        <p className='text-center'>
           Already a user? <Link to='/log-in'>Log in here</Link>
         </p>
       </main>
