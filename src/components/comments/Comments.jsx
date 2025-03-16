@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -17,7 +17,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function Comments({ commentsArray, postId }) {
   const [comments, setComments] = useState([]);
   const [commentEdited, setCommentEdited] = useState({});
-
+  const commentsHeaderRef = useRef(null);
   const { logOut } = useContext(FullNameContext);
 
   useEffect(() => {
@@ -113,6 +113,7 @@ export default function Comments({ commentsArray, postId }) {
   const handleEdit = (comment) => {
     setCommentEdited(comment);
     setValue('content', comment.content);
+    commentsHeaderRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const cancelEditing = () => {
@@ -122,7 +123,7 @@ export default function Comments({ commentsArray, postId }) {
 
   return (
     <div className='comments'>
-      <h3>Comments</h3>
+      <h3 ref={commentsHeaderRef}>Comments</h3>
 
       {localStorage.getItem('token') ? (
         <>
@@ -173,7 +174,7 @@ export default function Comments({ commentsArray, postId }) {
             <div key={comment.id}>
               <div className='d-flex justify-content-between align-items-center'>
                 <p className='text-muted mb-0'>
-                  {format(comment.date, 'd.M.yyyy., HH:mm')}
+                  {format(comment.date, 'd MMM yyyy, HH:mm')}
                 </p>
                 {comment.user?.email === localStorage.getItem('userEmail') ? (
                   <div className='dropdown'>
