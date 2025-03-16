@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
+import { clearLocalStorage } from '../../utils/helpers';
+import { FullNameContext } from '../../main';
 
 const commentSchema = z.object({
   content: z.string().min(5, 'Comment must be at least 5 characters long'),
@@ -15,6 +17,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function Comments({ commentsArray, postId }) {
   const [comments, setComments] = useState([]);
   const [commentEdited, setCommentEdited] = useState({});
+
+  const { logOut } = useContext(FullNameContext);
 
   useEffect(() => {
     if (Array.isArray(commentsArray)) {
@@ -30,15 +34,6 @@ export default function Comments({ commentsArray, postId }) {
     formState: { errors },
   } = useForm({ resolver: zodResolver(commentSchema) });
 
-  const refreshComments = async () => {
-    fetch(`${BASE_URL}/comments?postId=${postId}`, { method: 'GET' })
-      .then((response) => response.json())
-      .then((json) => {
-        setComments(json.comments);
-      })
-      .catch(() => toast.error('Error fetching comments'));
-  };
-
   const postComment = async (data) => {
     reset();
     try {
@@ -51,7 +46,10 @@ export default function Comments({ commentsArray, postId }) {
         body: JSON.stringify({ content: data.content, postId }),
       });
 
-      if (!response.ok) throw new Error('Error posting the comment');
+      if (response.status == 401) {
+        clearLocalStorage();
+        logOut();
+      } else if (!response.ok) throw new Error('Error posting the comment');
 
       const json = await response.json();
 
@@ -72,7 +70,10 @@ export default function Comments({ commentsArray, postId }) {
         },
       })
         .then(async (response) => {
-          if (response.status === 200)
+          if (response.status == 401) {
+            clearLocalStorage();
+            logOut();
+          } else if (response.status === 200)
             setComments(comments.filter((item) => item.id != comment.id));
         })
         .catch(() => toast.error('Error deleting the comment'));

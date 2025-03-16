@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { createContext, StrictMode, useContext, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './scss/styles.scss';
@@ -25,21 +25,43 @@ const router = createBrowserRouter([
   { path: '/sign-up', element: <SignUp /> },
 ]);
 
+export const FullNameContext = createContext();
+
+export const FullNameProvider = ({ children }) => {
+  const [fullName, setFullName] = useState(
+    localStorage.getItem('userFullName')
+  );
+
+  const logIn = (newFullName) => setFullName(newFullName);
+  const logOut = () => {
+    console.log('logging out');
+    setFullName('');
+  };
+
+  return (
+    <FullNameContext.Provider value={{ fullName, logIn, logOut }}>
+      {children}
+    </FullNameContext.Provider>
+  );
+};
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <ToastContainer
-      position='top-right'
-      autoClose={5000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick={false}
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme='light'
-      transition={Slide}
-    />
+    <FullNameProvider>
+      <RouterProvider router={router} />
+      <ToastContainer
+        position='top-right'
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme='light'
+        transition={Slide}
+      />
+    </FullNameProvider>
   </StrictMode>
 );

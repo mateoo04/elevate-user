@@ -1,27 +1,26 @@
-import { useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { clearLocalStorage, isTokenExpired } from '../../utils/helpers';
+import { FullNameContext } from '../../main';
 
 export default function Header({ hideLogInButton }) {
-  const [fullName, setFullName] = useState(
-    localStorage.getItem('userFullName')
-  );
+  const { fullName, logOut } = useContext(FullNameContext);
+
+  const token = localStorage.getItem('token');
 
   const navigate = useNavigate();
 
-  const isTokenExpired = () => {
-    const expiryTime = localStorage.getItem('tokenExpiry');
+  if (isTokenExpired()) {
+    clearLocalStorage();
+  }
 
-    if (!expiryTime || Date.now() >= expiryTime) return true;
-
-    return false;
-  };
+  useEffect(() => {
+    if (!localStorage.getItem('token') && fullName) logOut();
+  }, [token, logOut, fullName]);
 
   const handleLogOut = () => {
-    localStorage.clear('token');
-    localStorage.clear('tokenExpiry');
-    localStorage.clear('userFullName');
-
-    setFullName('');
+    clearLocalStorage();
+    logOut();
   };
 
   return (
@@ -42,7 +41,7 @@ export default function Header({ hideLogInButton }) {
             {fullName}
           </button>
           <ul className='dropdown-menu'>
-            {isTokenExpired() ? (
+            {!localStorage.getItem('token') || isTokenExpired() ? (
               <>
                 <li>
                   <button

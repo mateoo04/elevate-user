@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../header/Header';
 import { toast } from 'react-toastify';
+import { FullNameContext } from '../../main';
+import { useContext } from 'react';
 
 const logInSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -16,13 +18,13 @@ const logInSchema = z.object({
 });
 
 export default function LogIn() {
+  const { logIn } = useContext(FullNameContext);
+
   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     setError,
-    watch,
-    clearErrors,
     formState: { errors },
   } = useForm({ resolver: zodResolver(logInSchema) });
 
@@ -51,6 +53,8 @@ export default function LogIn() {
           `${json.firstName} ${json.lastName}`
         );
         localStorage.setItem('userEmail', json.email);
+
+        logIn(`${json.firstName} ${json.lastName}`);
 
         navigate('/');
       }

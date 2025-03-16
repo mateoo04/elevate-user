@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
 import Header from '../header/Header';
+import { useContext } from 'react';
+import { FullNameContext } from '../../main';
 
 const createUserSchema = z
   .object({
@@ -29,6 +31,8 @@ const createUserSchema = z
   });
 
 export default function SignUp() {
+  const { logIn } = useContext(FullNameContext);
+
   const navigate = useNavigate();
   const {
     register,
@@ -59,6 +63,8 @@ export default function SignUp() {
         `${json.firstName} ${json.lastName}`
       );
       localStorage.setItem('userEmail', json.email);
+
+      logIn(`${json.firstName} ${json.lastName}`);
 
       navigate('/');
     } catch {

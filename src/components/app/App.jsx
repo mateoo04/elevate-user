@@ -45,7 +45,7 @@ function App() {
           <div className='row g-3'>
             {posts.map((post) => {
               return (
-                <div className='col-sm-6 col-lg-4'>
+                <div className='col-sm-6 col-lg-4' key={'container-' + post.id}>
                   <div
                     className='card h-100'
                     onClick={() => navigate(`/posts/${post.id}`)}
