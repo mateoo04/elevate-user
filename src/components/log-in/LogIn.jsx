@@ -40,7 +40,7 @@ export default function LogIn() {
 
       if (response.status == 401) {
         setError('server', { message: 'Invalid credentials' });
-      } else if (!response.ok) toast.error('Failed to log in');
+      } else if (!response.ok) throw new Error('Failed to log in');
       else {
         const json = await response.json();
 

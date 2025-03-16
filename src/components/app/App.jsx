@@ -17,9 +17,12 @@ function App() {
       try {
         const response = await fetch(postsUrl, {
           method: 'GET',
+          headers: {
+            Authorization: localStorage.getItem('token'),
+          },
         });
 
-        if (!response.ok) toast.error('Failed to fetch posts');
+        if (!response.ok) throw new Error('Failed to fetch posts');
 
         const json = await response.json();
 
@@ -35,7 +38,7 @@ function App() {
   return (
     <>
       <Header />
-      <main className='container mt-4'>
+      <main className='container mt-4 mb-4'>
         {posts.length === 0 ? (
           <p>Loading...</p>
         ) : (

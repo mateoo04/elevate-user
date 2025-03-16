@@ -21,7 +21,7 @@ export default function Post() {
           method: 'GET',
         });
 
-        if (!response.ok) toast.error('Error fetching posts');
+        if (!response.ok) throw new Error('Error fetching posts');
 
         const json = await response.json();
 
@@ -57,7 +57,6 @@ export default function Post() {
           />
         )}
         <p>{post.content}</p>
-        <h3>Comments</h3>
         <Comments commentsArray={post.comments} postId={id} />
       </main>
     </>

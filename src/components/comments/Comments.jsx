@@ -14,6 +14,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Comments({ commentsArray, postId }) {
   const [comments, setComments] = useState([]);
+  const [commentEdited, setCommentEdited] = useState({});
 
   useEffect(() => {
     if (Array.isArray(commentsArray)) {
@@ -25,8 +26,18 @@ export default function Comments({ commentsArray, postId }) {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({ resolver: zodResolver(commentSchema) });
+
+  const refreshComments = async () => {
+    fetch(`${BASE_URL}/comments?postId=${postId}`, { method: 'GET' })
+      .then((response) => response.json())
+      .then((json) => {
+        setComments(json.comments);
+      })
+      .catch(() => toast.error('Error fetching comments'));
+  };
 
   const postComment = async (data) => {
     reset();
@@ -40,54 +51,109 @@ export default function Comments({ commentsArray, postId }) {
         body: JSON.stringify({ content: data.content, postId }),
       });
 
-      if (!response.ok) toast.error('Error posting the comment');
+      if (!response.ok) throw new Error('Error posting the comment');
 
-      refreshComments();
+      const json = await response.json();
+
+      setComments([json.comment, ...comments]);
     } catch {
       toast.error('Error posting the comment');
     }
   };
 
-  const refreshComments = async () => {
-    fetch(`${BASE_URL}/comments?postId=${postId}`, { method: 'GET' })
-      .then((response) => response.json())
-      .then((json) => {
-        setComments(json.comments);
-      })
-      .catch(() => toast.error('Error fetching comments'));
-  };
-
   const deleteComment = async (comment) => {
     if (comment.user.email !== localStorage.getItem('userEmail')) return;
 
-    fetch(`${BASE_URL}/comments/${comment.id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: localStorage.getItem('token'),
-      },
-    })
-      .then(async (response) => {
-        if (response.status === 200) await refreshComments();
+    if (confirm('Are you sure you want to delete this comment?')) {
+      fetch(`${BASE_URL}/comments/${comment.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: localStorage.getItem('token'),
+        },
       })
-      .catch(() => toast.error('Error deleting the comment'));
+        .then(async (response) => {
+          if (response.status === 200)
+            setComments(comments.filter((item) => item.id != comment.id));
+        })
+        .catch(() => toast.error('Error deleting the comment'));
+    }
+  };
+
+  const putComment = async (data) => {
+    reset();
+    try {
+      const response = await fetch(`${BASE_URL}/comments/${commentEdited.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: localStorage.getItem('token'),
+        },
+        body: JSON.stringify({ content: data.content, postId }),
+      });
+
+      if (!response.ok) throw new Error('Error updating the comment');
+
+      const json = await response.json();
+
+      setComments(
+        comments.map((item) => {
+          if (json.comment.id == item.id) {
+            return json.comment;
+          }
+          return item;
+        })
+      );
+
+      setCommentEdited({});
+    } catch {
+      toast.error('Error updating the comment');
+    }
+  };
+  const handleEdit = (comment) => {
+    setCommentEdited(comment);
+    setValue('content', comment.content);
+  };
+
+  const cancelEditing = () => {
+    setCommentEdited({});
+    setValue('content', '');
   };
 
   return (
     <div className='comments'>
+      <h3>Comments</h3>
+
       {localStorage.getItem('token') ? (
         <>
-          {Object.values(errors) != 0 && (
+          {errors.content?.message && (
             <p>{Object.values(errors).at(0)?.message}</p>
           )}
-          <form onSubmit={handleSubmit(postComment)} className='mb-3'>
+          <form
+            onSubmit={
+              commentEdited.content
+                ? handleSubmit(putComment)
+                : handleSubmit(postComment)
+            }
+            className='mb-3'
+          >
             <textarea
               className='form-control mb-3'
               name='content'
               id='content'
               {...register('content')}
             ></textarea>
+            <button
+              className={
+                'btn bg-secondary text-white me-2 ' +
+                (commentEdited.content ? '' : 'd-none')
+              }
+              onClick={cancelEditing}
+              type='button'
+            >
+              Cancel
+            </button>
             <button className='btn bg-primary text-white' type='submit'>
-              Post comment
+              {commentEdited.content ? 'Save changes' : 'Post comment'}
             </button>
           </form>
         </>
@@ -97,6 +163,7 @@ export default function Comments({ commentsArray, postId }) {
           to comment.
         </p>
       )}
+
       {comments?.length === 0 ? (
         <p>No comments yet</p>
       ) : (
@@ -119,6 +186,12 @@ export default function Comments({ commentsArray, postId }) {
                     </button>
                     <ul className='dropdown-menu'>
                       <li>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => handleEdit(comment)}
+                        >
+                          Edit
+                        </button>
                         <button
                           className='dropdown-item'
                           onClick={() => deleteComment(comment)}

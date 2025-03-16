@@ -48,7 +48,7 @@ export default function SignUp() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) toast.error('Failed to sign up');
+      if (!response.ok) throw new Error('Failed to sign up');
 
       const json = await response.json();
 
